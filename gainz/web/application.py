@@ -4,6 +4,7 @@ from importlib import metadata
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.responses import UJSONResponse
+from fastapi.staticfiles import StaticFiles
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -48,5 +49,6 @@ def get_app() -> FastAPI:
 
     # Main router for the API.
     app.include_router(router=api_router, prefix="/api")
+    app.mount("/", StaticFiles(directory="gainz/static", html=True), name="static")
 
     return app
