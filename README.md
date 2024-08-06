@@ -1,11 +1,16 @@
 # gainz
 
-This project was generated using fastapi_template.
+This is a [backend test](https://docs.google.com/document/d/1qKMGyYrd1r8fVHdTd-x9_naIc_H29VrLtl9JZAOk6PI/edit) for Gainz AI company. The aim is to build a chat interface with OpenAI's realtime streaming API with FastAPI framework. The detail is as follows:
+* the project is bootstraped using [fastapi_template](https://github.com/s3rius/FastAPI-template)
+* no database is used as we can mostly rely on OpenAI's API as the source of truth
+  * that is, if the server restart the data is gone
+* use pydantic for schema
+* front-end is built using plain HTML and jQuery
+* the dependency management is Poetry
+  * dependencies are listed in `pyproject.toml` file
+* this project relies heavily on websocket and thus should be handled properly in production
 
-## Poetry
-
-This project uses poetry. It's a modern dependency management
-tool.
+## Quick Commands
 
 To run the project use this set of commands:
 
@@ -19,8 +24,6 @@ This will start the server on the configured host.
 You can find swagger documentation at `/api/docs`.
 
 You can read more about poetry here: https://python-poetry.org/
-
-## Docker
 
 You can start the project with docker using this command:
 
@@ -46,19 +49,24 @@ docker-compose build
 ## Project structure
 
 ```bash
-$ tree "gainz"
-gainz
-├── conftest.py  # Fixtures for all tests.
-├── __main__.py  # Startup script. Starts uvicorn.
-├── services  # Package for different external services such as rabbit or redis etc.
-├── settings.py  # Main configuration settings for project.
-├── static  # Static content.
-├── tests  # Tests for project.
-└── web  # Package contains web server. Handlers, startup config.
-    ├── api  # Package with all handlers.
-    │   └── router.py  # Main router.
-    ├── application.py  # FastAPI application configuration.
-    └── lifespan.py  # Contains actions to perform on startup and shutdown.
+├── services
+│   ├── jwt_auth.py # handling jwt encrypt/decrypt and utilities
+│   └── openai.py # initialize and configure openai API
+├── settings.py # list environment variables
+├── static # html static files
+│   ├── chat.html # chatroom interface
+│   ├── chats.html # managing and joining chatrooms
+│   └── index.html # login page
+└── web
+    ├── api
+    │   ├── auth
+    │   │   └── views.py # authentication routes
+    │   ├── router.py # route listing
+    │   └── thread
+    │       ├── schema.py # schema for interfacing with OpenAI's API and the client
+    │       ├── views.py # chat-related routes
+    │       └── websocket.py # websocket routes
+    └── application.py # FastAPI initialization
 ```
 
 ## Configuration
@@ -80,6 +88,8 @@ An example of .env file:
 GAINZ_RELOAD="True"
 GAINZ_PORT="8000"
 GAINZ_ENVIRONMENT="dev"
+GAINZ_AUTH_JWT_SECRET="..."
+GAINZ_OPENAI_KEY="..."
 ```
 
 You can read more about BaseSettings class here: https://pydantic-docs.helpmanual.io/usage/settings/
