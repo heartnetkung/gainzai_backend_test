@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .chat-container {
+                min-height: 60px;
+                width: 100%;
+                display: inline-block;
+                padding-bottom:10px;
+            }
+            .chat-container.small {
+                min-height: 50px;
+            }
+            .display-name {
+                text-align: left;
+                font-weight: bold;
+            }
+            .text-message {
+                text-align: left;
+            }
+            .text-container,
+            .circle {
+                float: left;
+            }
+            .current-user-container {
+                float: right;
+                padding: 5px 20px;
+                background: #ddd;
+                border-radius: 10px;
+                margin-right: 10px;
+                margin-top: 10px;
+            }
+            .circle {
+                width: 50px;
+                height: 50px;
+                border-radius: 200px;
+                background: #f39c12;
+                margin-right: 10px;
+            }
+            .circle.user_1 {
+                background: #1abc9c;
+            }
+            .circle.user_2 {
+                background: #3498db;
+            }
+            .clearfix::after {
+                content: "";
+                display: table;
+                clear: both;
+            }
+        </style>
+    </head>
+    <body>
+        <center>
+            <h1 style="margin-top: 50px;">Chat</h1>
+            <div style="margin-top: 50px; width: 500px;">
+                <div
+                    id="chats-container"
+                    style="overflow-y: scroll; height: 500px;"
+                >
+                    <div
+                        id="chats"
+                        style="display: flex; flex-direction: column-reverse; min-height: 500px;"
+                    ></div>
+                </div>
+                <div>
+                    <input id="text-input" style="width: 390px;" /><button
+                        id="send-button"
+                        style="margin-left: 20px; width: 80px;"
+                    >
+                        Send
+                    </button>
+                </div>
+            </div>
+        </center>
+
+        <script
+            src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+            type="text/javascript"
+        ></script>
+
+        <script type="text/javascript">
+            const wrapError = (func) => (...args) => {
+                try {
+                    return func.apply(null, args);
+                } catch (error) {
+                    alert(error.message);
+                    throw error;
+                }
+            };
+
+            const getCurrentUser = wrapError(async () => {
+                const response = await fetch("/api/current_user", {
+                    headers: { "X-token": localStorage.getItem("token") },
+                });
+                return await response.json();
+            });
+
+            const getChats = wrapError(async (threadId) => {
+                const url = `/api/threads/${threadId}/messages`;
+                const response = await fetch(url, {
+                    headers: { "X-token": localStorage.getItem("token") },
+                });
+                return await response.json();
+            });
+
+            const renderChat = (chatObj, currentUser) => {
+                const isCurrentUser = currentUser.user_id === chatObj.user_id;
+                const text = chatObj.text.replace(/\n/g, "<br>");
+                if (isCurrentUser)
+                    return `<div id=${chatObj.id} class="chat-container small"><div class="current-user-container"><div class="text-message">${text}</div></div></div>`;
+
+                const displayName = chatObj.user_id || "Lionel Messi";
+                return `<div id=${chatObj.id} class="chat-container"><div class="circle ${chatObj.user_id}"></div><div class="text-container"><div class="display-name">${displayName}</div><div class="text-message">${text}</div></div></div>`;
+            };
+
+            const getThreadId = () => {
+                return new URLSearchParams(location.search).get("id");
+            };
+
+            const scrollToBottom = () => {
+                const container = $("#chats-container");
+                container.scrollTop(container.prop("scrollHeight"));
+            };
+
+            $(async () => {
+                const currentUser = await getCurrentUser();
+                const threadId = getThreadId();
+                const token = localStorage.getItem("token");
+                const ws = new WebSocket(
+                    `ws://localhost:8000/ws/threads/${threadId}?token=${token}`,
+                );
+
+                ws.onmessage = function (event) {
+                    const chat = JSON.parse(event.data);
+                    if (chat.replace) {
+                        $(`#${chat.id} .text-message`).text(chat.text);
+                    } else {
+                        $("#chats").prepend(renderChat(chat, currentUser));
+                    }
+                    scrollToBottom()
+                };
+
+                $("#send-button").on("click", () => {
+                    const inputElement = $("#text-input");
+                    const value = inputElement.val();
+                    if (value) ws.send(value);
+                    inputElement.val("");
+                });
+
+                getChats(threadId).then((chatData) => {
+                    for (const chat of chatData)
+                        $("#chats").append(renderChat(chat, currentUser));
+                    scrollToBottom()
+                });
+            });
+        </script>
+    </body>
+</html>
