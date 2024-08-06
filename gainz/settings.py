@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     environment: str = "dev"
 
     log_level: LogLevel = LogLevel.INFO
+    auth_jwt_secret: str = ""
+    openai_key: str = ""
 
     # Sentry's configuration.
     sentry_dsn: Optional[str] = None
