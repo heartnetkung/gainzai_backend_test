@@ -1,6 +1,6 @@
 # gainz
 
-This is a [backend test](https://docs.google.com/document/d/1qKMGyYrd1r8fVHdTd-x9_naIc_H29VrLtl9JZAOk6PI/edit) for Gainz AI company. The aim is to build a chat interface with OpenAI's realtime streaming API with FastAPI framework. The detail is as follows:
+This is a [backend test](https://docs.google.com/document/d/1qKMGyYrd1r8fVHdTd-x9_naIc_H29VrLtl9JZAOk6PI/edit) for Gainz AI company. The aim is to build a minimalist chat interface with OpenAI's realtime streaming API with FastAPI framework. The detail is as follows:
 * this is the work of Touchchai (https://www.linkedin.com/in/heartnetkung/)
 * the project is bootstraped using [fastapi_template](https://github.com/s3rius/FastAPI-template)
 * no database is used as we can mostly rely on OpenAI's API as the source of truth
