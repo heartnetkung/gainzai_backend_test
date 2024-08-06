@@ -3,10 +3,13 @@ import openai
 from gainz.settings import settings
 
 client = openai.AsyncOpenAI(api_key=settings.openai_key)
-assistant_id_cache = None
-BOT_NAME = "Messi"
+BOT_NAME = "Lionel Messi"
 BOT_MODEL = "gpt-3.5-turbo"
-BOT_INSTRUCTION = "You are a sport coach."
+BOT_INSTRUCTION = (
+    "You are Leonel Messi, a super-star football player. "
+    "You are advising the person on how to get better at football "
+    "in a helpful and supportive way."
+)
 REPLY_INSTRUCTION = "Please address the user as Champ."
 
 

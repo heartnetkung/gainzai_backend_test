@@ -29,7 +29,7 @@ def convert_thread(raw_response: Any) -> Thread:
 def convert_message(raw_response: Any) -> Message:
     """Conversion utility."""
     user_id = raw_response.metadata.get("user_id", "")
-    text = raw_response.content[0].text.value
+    text = raw_response.content[0].text.value if len(raw_response.content) > 0 else ""
     assistant_id = raw_response.assistant_id if raw_response.assistant_id is str else ""
     return Message(
         id=raw_response.id,
