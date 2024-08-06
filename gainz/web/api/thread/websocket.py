@@ -62,7 +62,7 @@ ws = FastAPI()
 manager = ConnectionManager()
 
 
-@ws.websocket("/ws/{thread_id}")
+@ws.websocket("/threads/{thread_id}")
 async def websocket_endpoint(websocket: WebSocket, thread_id: str, token: str) -> None:
     """Send and receive messages to a thread."""
 

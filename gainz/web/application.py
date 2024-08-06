@@ -10,6 +10,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 
 from gainz.settings import settings
 from gainz.web.api.router import api_router
+from gainz.web.api.thread import ws
 from gainz.web.lifespan import lifespan_setup
 
 
@@ -50,5 +51,6 @@ def get_app() -> FastAPI:
     # Main router for the API.
     app.include_router(router=api_router, prefix="/api")
     app.mount("/", StaticFiles(directory="gainz/static", html=True), name="static")
+    app.mount("/ws", ws)
 
     return app
