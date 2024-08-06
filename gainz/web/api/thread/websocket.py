@@ -13,12 +13,11 @@ from .schema import convert_message
 OpenAIMessage = openai.types.beta.threads.message.Message
 
 
-class ConnectionManager(openai.AsyncAssistantEventHandler):
-    """Event Handler for websocket and OpenAI's stream."""
+class ConnectionManager:
+    """Event Handler for websocket."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self) -> None:
         self.active_threads: dict[str, list[WebSocket]] = {}
-        super().__init__(**kwargs)
 
     async def connect(self, thread_id: str, websocket: WebSocket) -> None:
         """Register websocket connection."""
@@ -40,17 +39,32 @@ class ConnectionManager(openai.AsyncAssistantEventHandler):
         for connection in self.active_threads[message.thread_id]:
             await connection.send_json(payload)
 
+
+class Handler(openai.AsyncAssistantEventHandler):
+    """Event Handler for OpenAI's stream."""
+
+    def __init__(self, manager: ConnectionManager, **kwargs: Any) -> None:
+        self.manager = manager
+        super().__init__(**kwargs)
+
     @override
     async def on_message_created(self, message: OpenAIMessage) -> None:
-        await self.broadcast(message, True)
+        logging.info("on_message_created")
+        await self.manager.broadcast(message)
 
     @override
     async def on_message_delta(self, delta: Any, snapshot: OpenAIMessage) -> None:
-        await self.broadcast(snapshot, True)
+        logging.info("on_message_delta")
+        await self.manager.broadcast(snapshot, True)
 
     @override
     async def on_message_done(self, message: OpenAIMessage) -> None:
-        await self.broadcast(message, True)
+        logging.info("on_message_done")
+        await self.manager.broadcast(message, True)
+
+    @override
+    async def on_event(self, event: Any) -> None:
+        logging.debug(event)
 
 
 async def bot_reply(thread_id: str, manager: ConnectionManager) -> None:
@@ -60,7 +74,7 @@ async def bot_reply(thread_id: str, manager: ConnectionManager) -> None:
         thread_id=thread_id,
         assistant_id=assistant_id,
         instructions=REPLY_INSTRUCTION,
-        event_handler=manager,
+        event_handler=Handler(manager),
     ) as stream:
         run_obj = await stream.get_final_run()
         if run_obj.last_error is not None:
