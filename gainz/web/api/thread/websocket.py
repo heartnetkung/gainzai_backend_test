@@ -30,23 +30,25 @@ class ConnectionManager(openai.AsyncAssistantEventHandler):
         """Unregister websocket connection."""
         self.active_threads[thread_id].remove(websocket)
 
-    async def broadcast(self, message: OpenAIMessage) -> None:
+    async def broadcast(self, message: OpenAIMessage, replace: bool = False) -> None:
         """Broadcast message back to all clients."""
         payload = convert_message(message).model_dump()
+        if replace:
+            payload["replace"] = True
         for connection in self.active_threads[message.thread_id]:
             await connection.send_json(payload)
 
     @override
     async def on_message_created(self, message: OpenAIMessage) -> None:
-        await self.broadcast(message)
+        await self.broadcast(message, True)
 
     @override
     async def on_message_delta(self, delta: Any, snapshot: OpenAIMessage) -> None:
-        await self.broadcast(snapshot)
+        await self.broadcast(snapshot, True)
 
     @override
     async def on_message_done(self, message: OpenAIMessage) -> None:
-        await self.broadcast(message)
+        await self.broadcast(message, True)
 
 
 async def bot_reply(thread_id: str, manager: ConnectionManager) -> None:

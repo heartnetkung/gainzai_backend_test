@@ -18,6 +18,7 @@ class Message(BaseModel):
     user_id: str
     created_at: int
     text: str
+    replace: bool = False
 
 
 def convert_thread(raw_response: Any) -> Thread:
