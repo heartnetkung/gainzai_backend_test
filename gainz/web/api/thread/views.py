@@ -1,15 +1,13 @@
 import logging
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter
 
-from gainz.services.jwt_auth import decode_user_data
+from gainz.services.openai import client
 
 from .schema import Message, Thread, convert_message, convert_thread
-from .websocket_helper import ConnectionManager, bot_reply, client
 
 router = APIRouter()
 all_threads: dict[str, Thread] = {}
-manager = ConnectionManager()
 
 
 @router.get("/threads")
@@ -69,25 +67,3 @@ async def list_messages(thread_id: str, after: str = "") -> list[Message]:
     except Exception as e:
         logging.critical(e, exc_info=True)
         raise e
-
-
-@router.websocket("/ws/{thread_id}")
-async def websocket_endpoint(websocket: WebSocket, thread_id: str, token: str) -> None:
-    """Send and receive messages to a thread."""
-
-    user_data = decode_user_data(token)
-    await manager.connect(thread_id, websocket)
-
-    try:
-        while True:
-            content = await websocket.receive_text()
-            user_message = await client.beta.threads.messages.create(
-                thread_id,
-                role="user",
-                content=content,
-                metadata={"user_id": user_data.user_id},
-            )
-            await manager.broadcast(user_message)
-            await bot_reply(thread_id, manager)
-    except WebSocketDisconnect:
-        manager.disconnect(thread_id, websocket)

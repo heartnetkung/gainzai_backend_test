@@ -1,19 +1,14 @@
 from typing import Any
 
 import openai
-from fastapi import WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from typing_extensions import override
 
-from gainz.settings import settings
+from gainz.services.jwt_auth import decode_user_data
+from gainz.services.openai import REPLY_INSTRUCTION, assistant, client
 
 from .schema import convert_message
 
-client = openai.AsyncOpenAI(api_key=settings.openai_key)
-assistant_id_cache = None
-BOT_NAME = "Messi"
-BOT_MODEL = "gpt-3.5-turbo"
-BOT_INSTRUCTION = "You are a sport coach."
-REPLY_INSTRUCTION = "Please address the user as Champ."
 OpenAIMessage = openai.types.beta.threads.message.Message
 
 
@@ -52,30 +47,6 @@ class ConnectionManager(openai.AsyncAssistantEventHandler):
         await self.broadcast(message)
 
 
-class _SingletonAssistant:
-    id: str = ""
-
-    async def get_id(self) -> str:
-        """Lazy initialization of assistant."""
-
-        if self.id == "":
-            assistants = await client.beta.assistants.list()
-            if len(assistants.data) == 0:
-                assistant = await client.beta.assistants.create(
-                    tools=[],
-                    name=BOT_NAME,
-                    model=BOT_MODEL,
-                    instructions=BOT_INSTRUCTION,
-                )
-                self.id = assistant.id
-            else:
-                self.id = assistants.data[0].id
-        return self.id
-
-
-assistant = _SingletonAssistant()
-
-
 async def bot_reply(thread_id: str, manager: ConnectionManager) -> None:
     """Initiate a bot reply."""
     assistant_id = await assistant.get_id()
@@ -85,3 +56,29 @@ async def bot_reply(thread_id: str, manager: ConnectionManager) -> None:
         instructions=REPLY_INSTRUCTION,
         event_handler=manager,
     )
+
+
+ws = FastAPI()
+manager = ConnectionManager()
+
+
+@ws.websocket("/ws/{thread_id}")
+async def websocket_endpoint(websocket: WebSocket, thread_id: str, token: str) -> None:
+    """Send and receive messages to a thread."""
+
+    user_data = decode_user_data(token)
+    await manager.connect(thread_id, websocket)
+
+    try:
+        while True:
+            content = await websocket.receive_text()
+            user_message = await client.beta.threads.messages.create(
+                thread_id,
+                role="user",
+                content=content,
+                metadata={"user_id": user_data.user_id},
+            )
+            await manager.broadcast(user_message)
+            await bot_reply(thread_id, manager)
+    except WebSocketDisconnect:
+        manager.disconnect(thread_id, websocket)
