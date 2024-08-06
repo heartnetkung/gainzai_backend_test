@@ -1,6 +1,7 @@
 # gainz
 
 This is a [backend test](https://docs.google.com/document/d/1qKMGyYrd1r8fVHdTd-x9_naIc_H29VrLtl9JZAOk6PI/edit) for Gainz AI company. The aim is to build a chat interface with OpenAI's realtime streaming API with FastAPI framework. The detail is as follows:
+* this is the work of Touchchai (https://www.linkedin.com/in/heartnetkung/)
 * the project is bootstraped using [fastapi_template](https://github.com/s3rius/FastAPI-template)
 * no database is used as we can mostly rely on OpenAI's API as the source of truth
   * that is, if the server restart the data is gone
@@ -10,7 +11,7 @@ This is a [backend test](https://docs.google.com/document/d/1qKMGyYrd1r8fVHdTd-x
   * dependencies are listed in `pyproject.toml` file
 * this project relies heavily on websocket and thus should be handled properly in production
 * according to this OpenAI's missing [feature on listing threads](https://community.openai.com
-    # /t/list-of-threads-is-missing-from-the-api/484510), we resort to simple implementation just for illustration purpose.
+    * /t/list-of-threads-is-missing-from-the-api/484510), we resort to simple implementation just for illustration purpose.
 
 ## Quick Commands
 
@@ -126,8 +127,6 @@ docker-compose down
 
 For running tests on your local machine.
 
-
-2. Run the pytest.
 ```bash
 pytest -vv .
 ```
