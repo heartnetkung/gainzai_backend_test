@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <center>
+            <h1 style="margin-top: 50px;">Chatrooms</h1>
+            <div>
+                Current user: <span id="current-user">None</span>
+                <button id="logout" style="margin-left: 20px;">logout</button>
+            </div>
+
+            <div style="margin-top: 50px; max-width: 500px;">
+                <button id="create-button">Create Chat</button>
+                <ol id="chatrooms"></ol>
+            </div>
+        </center>
+
+        <script
+            src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+            type="text/javascript"
+        ></script>
+
+        <script type="text/javascript">
+            const renderChat = (chatId) => {
+                return `<li style="margin-top:10px;"><a href="/chat.html?id=${chatId}">${chatId}</a><button class="remove-button" style="margin-left:20px" data-chat-id="${chatId}">remove</button></li>`;
+            };
+            const wrapError = (func) => (...args) => {
+                try {
+                    return func.apply(null, args);
+                } catch (error) {
+                    alert(error.message);
+                    throw error;
+                }
+            };
+
+            const getCurrentUser = wrapError(async () => {
+                const response = await fetch("/api/current_user", {
+                    headers: { "X-token": localStorage.getItem("token") },
+                });
+                return await response.json();
+            });
+            const createChat = wrapError(async () => {
+                const response = await fetch("/api/threads", {
+                    method: "POST",
+                    headers: { "X-token": localStorage.getItem("token") },
+                });
+                return await response.json();
+            });
+            const getChats = wrapError(async () => {
+                const response = await fetch("/api/threads", {
+                    headers: { "X-token": localStorage.getItem("token") },
+                });
+                return await response.json();
+            });
+            const deleteChats = wrapError(async (id) => {
+                await fetch("/api/threads/"+id, {
+                    method: "DELETE",
+                    headers: { "X-token": localStorage.getItem("token") },
+                });
+            });
+
+            $(() => {
+                $("#logout").click(() => {
+                    localStorage.removeItem("token");
+                    location = "/";
+                });
+                $("#chatrooms").on("click", ".remove-button", async (event) => {
+                    const buttonElement = $(event.target);
+                    await deleteChats(buttonElement.data("chat-id"))
+                    buttonElement.parent("li").remove();
+                });
+                $("#create-button").on("click", async (event) => {
+                    const chatObj = await createChat();
+                    $("#chatrooms").append(renderChat(chatObj.id));
+                });
+
+                getCurrentUser().then((currentUser) => {
+                    $("#current-user").text(currentUser.user_id);
+                });
+                getChats().then((chatArray) => {
+                    for (const chat of chatArray)
+                        $("#chatrooms").append(renderChat(chat.id));
+                });
+            });
+        </script>
+    </body>
+</html>
