@@ -50,7 +50,7 @@ def get_app() -> FastAPI:
 
     # Main router for the API.
     app.include_router(router=api_router, prefix="/api")
-    app.mount("/", StaticFiles(directory="gainz/static", html=True), name="static")
     app.mount("/ws", ws)
+    app.mount("/", StaticFiles(directory="gainz/static", html=True), name="static")
 
     return app

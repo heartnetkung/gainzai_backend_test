@@ -22,6 +22,8 @@ class ConnectionManager(openai.AsyncAssistantEventHandler):
         """Register websocket connection."""
 
         await websocket.accept()
+        if thread_id not in self.active_threads:
+            self.active_threads[thread_id] = []
         self.active_threads[thread_id].append(websocket)
 
     def disconnect(self, thread_id: str, websocket: WebSocket) -> None:
@@ -30,7 +32,7 @@ class ConnectionManager(openai.AsyncAssistantEventHandler):
 
     async def broadcast(self, message: OpenAIMessage) -> None:
         """Broadcast message back to all clients."""
-        payload = convert_message(message)
+        payload = convert_message(message).model_dump()
         for connection in self.active_threads[message.thread_id]:
             await connection.send_json(payload)
 
