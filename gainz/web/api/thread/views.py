@@ -30,7 +30,7 @@ async def create_thread() -> Thread:
         all_threads[retval.id] = retval
         return retval
     except Exception as e:
-        logging.critical(e, exc_info=True)
+        logging.error(e, exc_info=True)
         raise e
 
 
@@ -44,7 +44,7 @@ async def delete_thread(thread_id: str) -> str:
             del all_threads[thread_id]
         return "success"
     except Exception as e:
-        logging.critical(e, exc_info=True)
+        logging.error(e, exc_info=True)
         raise e
 
 
@@ -65,5 +65,5 @@ async def list_messages(thread_id: str, after: str = "") -> list[Message]:
             )
         return list(map(convert_message, messages.data))
     except Exception as e:
-        logging.critical(e, exc_info=True)
+        logging.error(e, exc_info=True)
         raise e

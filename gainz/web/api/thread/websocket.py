@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 import openai
@@ -15,8 +16,9 @@ OpenAIMessage = openai.types.beta.threads.message.Message
 class ConnectionManager(openai.AsyncAssistantEventHandler):
     """Event Handler for websocket and OpenAI's stream."""
 
-    def __init__(self) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.active_threads: dict[str, list[WebSocket]] = {}
+        super().__init__(**kwargs)
 
     async def connect(self, thread_id: str, websocket: WebSocket) -> None:
         """Register websocket connection."""
@@ -54,12 +56,17 @@ class ConnectionManager(openai.AsyncAssistantEventHandler):
 async def bot_reply(thread_id: str, manager: ConnectionManager) -> None:
     """Initiate a bot reply."""
     assistant_id = await assistant.get_id()
-    client.beta.threads.runs.stream(
+    async with client.beta.threads.runs.stream(
         thread_id=thread_id,
         assistant_id=assistant_id,
         instructions=REPLY_INSTRUCTION,
         event_handler=manager,
-    )
+    ) as stream:
+        run_obj = await stream.get_final_run()
+        if run_obj.last_error is not None:
+            logging.error(run_obj.last_error.message)
+        else:
+            logging.info("bot reply done")
 
 
 ws = FastAPI()
