@@ -19,6 +19,7 @@ class UserData(BaseModel):
 
 def encode_user_data(api_key: str) -> str:
     """Encode user data from the given api_key."""
+
     if USERS.get(api_key) is None:
         raise HTTPException(status_code=401, detail="Invalid API Key")
     payload = {"user_id": USERS[api_key]}
@@ -27,6 +28,7 @@ def encode_user_data(api_key: str) -> str:
 
 async def decode_auth_header(x_token: Annotated[str, Header()]) -> UserData:
     """Decode user data from encrypted X-Token http header."""
+
     try:
         payload = jwt.decode(x_token, SECRET, algorithms=[ALGORITHM])
         if payload.get("user_id") is None:

@@ -51,6 +51,7 @@ async def delete_thread(thread_id: str) -> str:
 @router.get("/threads/{thread_id}/messages")
 async def list_messages(thread_id: str, after: str = "") -> list[Message]:
     """List messages in a thread."""
+
     try:
         if after != "":
             messages = await client.beta.threads.messages.list(

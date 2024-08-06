@@ -68,7 +68,8 @@ class Handler(openai.AsyncAssistantEventHandler):
 
 
 async def bot_reply(thread_id: str, manager: ConnectionManager) -> None:
-    """Initiate a bot reply."""
+    """Initiate OpenAI's bot reply."""
+
     assistant_id = await assistant.get_id()
     async with client.beta.threads.runs.stream(
         thread_id=thread_id,
