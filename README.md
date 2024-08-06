@@ -10,8 +10,7 @@ This is a [backend test](https://docs.google.com/document/d/1qKMGyYrd1r8fVHdTd-x
 * the dependency management is Poetry
   * dependencies are listed in `pyproject.toml` file
 * this project relies heavily on websocket and thus should be handled properly in production
-* according to this OpenAI's missing [feature on listing threads](https://community.openai.com
-    * /t/list-of-threads-is-missing-from-the-api/484510), we resort to simple implementation just for illustration purpose.
+* according to this OpenAI's missing [feature on listing threads](https://community.openai.com/t/list-of-threads-is-missing-from-the-api/484510), we resort to simple implementation just for illustration purpose.
 
 ## Quick Commands
 
